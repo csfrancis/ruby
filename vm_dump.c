@@ -686,9 +686,13 @@ void
 rb_print_backtrace(void)
 {
 #if HAVE_BACKTRACE
+#ifndef USE_BACKTRACE_SYMBOLS
+#define USE_BACKTRACE_SYMBOLS 0
+#endif
 #define MAX_NATIVE_TRACE 1024
     static void *trace[MAX_NATIVE_TRACE];
     int n = backtrace(trace, MAX_NATIVE_TRACE);
+#ifdef USE_BACKTRACE_SYMBOLS
     char **syms = backtrace_symbols(trace, n);
 
     if (syms) {
@@ -701,6 +705,10 @@ rb_print_backtrace(void)
 	}
 #endif
 	free(syms);
+#else
+    if (n) {
+        backtrace_symbols_fd(trace, n, STDERR_FILENO);
+#endif
     }
 #elif defined(_WIN32)
     DWORD tid = GetCurrentThreadId();
